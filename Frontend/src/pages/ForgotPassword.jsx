@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useState } from "react";
 import { IoArrowBack } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,64 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleSendOtp = async () => {
+    try {
+      const res = await axios.post(
+        `http://localhost:8000/api/auth/send-otp`,
+        {
+          email,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+      if (res.data.success) {
+        console.log(res);
+        setStep(2);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      const res = await axios.post(
+        `http://localhost:8000/api/auth/verify-otp`,
+        {
+          email,
+          otp,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+      if (res.data.success) {
+        console.log(res);
+        setStep(3);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    try {
+      const res = await axios.post(
+        `http://localhost:8000/api/auth/reset-password`,
+        { email, confirmPassword },
+        {
+          withCredentials: true,
+        },
+      );
+      if (res.data.success) {
+        console.log(res);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
   return (
     <div className="flex min-w-screen min-h-screen items-center justify-center p-4 bg-[#fff9f6]">
       <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-8">
