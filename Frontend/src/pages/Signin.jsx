@@ -7,6 +7,8 @@ import axios from "axios";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
+import { useDispatch } from "react-redux";
+import { setUserData } from "../Redux/userSlice";
 const Signin = () => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -16,6 +18,7 @@ const Signin = () => {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const signinHandler = async (e) => {
     e.preventDefault();
@@ -37,6 +40,7 @@ const Signin = () => {
       if (res.data.success) {
         setError("");
         console.log(res);
+        dispatch(setUserData(res.data.user));
         navigate("/");
       }
     } catch (error) {
@@ -52,24 +56,34 @@ const Signin = () => {
       const provider = new GoogleAuthProvider();
       const res = await signInWithPopup(auth, provider);
 
-      const { data } = await axios.post(
+      const result = await axios.post(
         `http://localhost:8000/api/auth/google-auth`,
         {
+          fullName: res.user.displayName || res.user.email.split("@")[0],
           email: res.user.email,
+          mobile: "0000000000",
+          role: "user",
         },
         {
           withCredentials: true,
         },
       );
 
-      if (data.success) {
-        navigate("/");
+      if (result?.data?.success) {
         setError("");
+        console.log(result);
+        dispatch(setUserData(result.data.user));
+        navigate("/");
       } else {
-        alert(data.message || "Authentication failed");
+        setError(result?.data.message || "Authentication failed");
       }
     } catch (error) {
-      setError(error.response.data.message);
+      console.error("Google Auth error:", error);
+      setError(
+        error.response?.data?.message ||
+          error.message ||
+          "Google sign-in failed",
+      );
     } finally {
       setLoading(false);
     }

@@ -35,6 +35,7 @@ export const signup = async (req, res) => {
         });
 
         const token = generateToken(user._id);
+        const userResponse = await User.findById(user._id).select('-password');
 
         return res
             .cookie('token', token, {
@@ -46,7 +47,8 @@ export const signup = async (req, res) => {
             .status(201)
             .json({
                 success: true,
-                message: 'Signed up successfully'
+                message: 'Signed up successfully',
+                user: userResponse
             });
 
     } catch (error) {
@@ -80,9 +82,9 @@ export const signin = async (req, res) => {
             message: 'Incorrect password'
         })
     }
-    const token = generateToken(user._id, {
+    const token = generateToken(user._id);
+    const userResponse = await User.findById(user._id).select('-password');
 
-    });
     return res.cookie('token', token, {
         secure: true,
         sameSite: 'strict',
@@ -92,7 +94,8 @@ export const signin = async (req, res) => {
         .status(200)
         .json({
             success: true,
-            message: 'Signed In successfully'
+            message: 'Signed In successfully',
+            user: userResponse
         })
 }
 
@@ -196,14 +199,25 @@ export const resetPassword = async (req, res) => {
 
 export const googleAuth = async (req, res) => {
     try {
-        const { fullName, email, mobile, role } = req.body;
+        const { fullName, email, mobile = "0000000000", role = "user" } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            })
+        }
+
         let user = await User.findOne({ email });
         if (!user) {
+            // For Google Auth, use email as part of fullName if not provided
+            const name = fullName || email.split('@')[0];
             user = await User.create({
-                fullName,
+                fullName: name,
                 email,
-                mobile,
-                role
+                mobile: mobile || "0000000000",
+                role: role || "user",
+                password: "google-auth" // placeholder for Google Auth users
             })
         }
 
@@ -215,10 +229,12 @@ export const googleAuth = async (req, res) => {
             httpOnly: true
         })
 
+        const userResponse = await User.findById(user._id).select('-password');
+
         return res.status(200).json({
             success: true,
             message: 'singed in successfully',
-            user,
+            user: userResponse,
         })
     } catch (error) {
         console.log(error);

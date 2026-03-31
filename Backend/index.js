@@ -5,6 +5,7 @@ import connectToDb from './db.js';
 import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth.route.js';
 import cors from 'cors';
+import userRouter from './routes/user.route.js';
 
 
 const app = express();
@@ -20,6 +21,7 @@ app.use(cors({
 
 // routes
 app.use('/api/auth', authRouter);
+app.use('/api/user', userRouter)
 
 connectToDb();
 app.listen(PORT, () => {

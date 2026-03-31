@@ -1,5 +1,5 @@
 import express from 'express';
-import { googleAuth, logout, resetPassword, sendOtp, signin, signup, verifyOtp } from '../controllers/userController.js';
+import { googleAuth, logout, resetPassword, sendOtp, signin, signup, verifyOtp } from '../controllers/auth.Controller.js';
 const authRouter = express.Router();
 
 authRouter.post('/signup', signup);
