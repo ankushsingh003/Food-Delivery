@@ -90,7 +90,9 @@ const Nav = () => {
               <>
                 <button className="hidden md:flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-[#ff4d2d]">
                   <FaPlus size={20} />
-                  <span>Add food items</span>
+                  <span onClick={() => navigate("/add-food")}>
+                    Add food items
+                  </span>
                 </button>
                 <button className="md:hidden flex items-center gap-1 p-2 cursor-pointer rounded-full bg-[#ff4d2d]/10 text-[#ff4d2d]">
                   <FaPlus size={20} />

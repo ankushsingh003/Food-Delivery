@@ -12,15 +12,15 @@ const useGetMyShop = () => {
           withCredentials: true,
         });
         if (res.data.success) {
-          console.log(res);
-          dispatch(setMyShopData(res.data.user));
+          console.log("Shop data fetched:", res.data.shop);
+          dispatch(setMyShopData(res.data.shop));
         }
       } catch (error) {
-        console.log(error);
+        console.log("Error fetching shop:", error);
       }
     };
     getMyShop();
-  }, []);
+  }, [dispatch]);
 };
 
 export default useGetMyShop;

@@ -6,18 +6,29 @@ import { useDispatch, useSelector } from "react-redux";
 import { setMyShopData } from "../Redux/ownerSlice";
 import axios from "axios";
 
-const CreateEditShop = () => {
+const AddFoodItem = () => {
   const navigate = useNavigate();
-  const { state, city, currentAddress } = useSelector((state) => state.user);
   const { myShopData } = useSelector((state) => state.owner);
   const dispatch = useDispatch();
 
-  const [name, setName] = useState(myShopData?.name || "");
-  const [address, setAddress] = useState(myShopData?.address || currentAddress);
-  const [shopCity, setShopCity] = useState(myShopData?.city || city);
-  const [shopState, setShopState] = useState(myShopData?.state || state);
+  const [name, setName] = useState("");
+  const [price, setPrice] = useState(0);
   const [frontEndImage, setFrontendImage] = useState(myShopData?.image || null);
   const [backendImage, setBackendImage] = useState(null);
+  const [category, setCategory] = useState("");
+  const [foodType, setFoodType] = useState("veg");
+  const categories = [
+    "Snacks",
+    "Main course",
+    "Desserts",
+    "Pizza",
+    "Burger",
+    "South Indian",
+    "North Indian",
+    "Chinese",
+    "Fast Food",
+    "Others",
+  ];
 
   const handleImage = (e) => {
     const file = e.target.files[0];
@@ -28,17 +39,22 @@ const CreateEditShop = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      if (!backendImage) {
+        alert("Please select an image");
+        return;
+      }
       const formData = new FormData();
       console.log("my shop data is: ", myShopData);
       formData.append("name", name);
-      formData.append("city", city);
-      formData.append("state", state);
-      formData.append("address", address);
+      formData.append("category", category);
+      formData.append("foodType", foodType);
+      formData.append("price", price);
+
       if (backendImage) {
         formData.append("image", backendImage);
       }
       const res = await axios.post(
-        `http://localhost:8000/api/shop/create-edit`,
+        `http://localhost:8000/api/item/add-item`,
         formData,
         {
           withCredentials: true,
@@ -48,8 +64,7 @@ const CreateEditShop = () => {
       console.log("Response received:", res.data);
       console.log("res printed");
       if (res.data.success) {
-        dispatch(setMyShopData(res.data.shop));
-        alert("Shop created/updated successfully!");
+        alert("Item added successfully!");
         navigate("/");
       }
     } catch (error) {
@@ -60,10 +75,13 @@ const CreateEditShop = () => {
           error.response.status,
           error.response.data,
         );
+        alert(`Error: ${error.response.data.message}`);
       } else if (error.request) {
         console.log("No response from server:", error.message);
+        alert("Network error - no response from server");
       } else {
         console.log("Error:", error.message);
+        alert(`Error: ${error.message}`);
       }
     }
   };
@@ -82,13 +100,13 @@ const CreateEditShop = () => {
             <FaUtensils className="text-[#ff4d2d] w-16 h-16" />
           </div>
           <div className="text-3xl font-extrabold text-gray-900">
-            {myShopData ? "Edit shop" : "Add shop"}
+            {myShopData ? "Edit Item" : "Add Item"}
           </div>
         </div>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
+              Dish Name
             </label>
             <input
               type="text"
@@ -100,7 +118,7 @@ const CreateEditShop = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Shop Image
+              Food Image
             </label>
             <input
               onChange={handleImage}
@@ -118,43 +136,48 @@ const CreateEditShop = () => {
               </div>
             )}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                State
-              </label>
-              <input
-                type="text"
-                value={shopState}
-                onChange={(e) => setShopState(e.target.value)}
-                placeholder="Enter Shop name"
-                className="w-full px-4 py-2 border border-gray-200 outline-none rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                City
-              </label>
-              <input
-                type="text"
-                value={shopCity}
-                onChange={(e) => setShopCity(e.target.value)}
-                placeholder="Enter Shop name"
-                className="w-full px-4 py-2 border border-gray-200 outline-none rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Price
+            </label>
+            <input
+              type="number"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="Enter the price"
+              className="w-full px-4 py-2 border border-gray-200 outline-none rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Shop Address
+              Food Type
             </label>
-            <input
-              type="text"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Enter Shop name"
+            <select
+              value={foodType}
+              onChange={(e) => setFoodType(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-200 outline-none rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500 mt-2"
+            >
+              <option value="">Select Food Type</option>
+              <option value="veg">veg</option>
+              <option value="non veg">non veg</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               className="w-full px-4 py-2 border border-gray-200 outline-none rounded-full focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+            >
+              <option value="">Select Category</option>
+              {categories.map((cate, index) => (
+                <option value={cate} key={index}>
+                  {cate}
+                </option>
+              ))}
+            </select>
           </div>
           <button className="w-full bg-[#ff4d2d] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:bg-orange-600 shadow-lg transition-all duration-200 cursor-pointer">
             Save
@@ -165,4 +188,4 @@ const CreateEditShop = () => {
   );
 };
 
-export default CreateEditShop;
+export default AddFoodItem;

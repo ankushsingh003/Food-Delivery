@@ -1,12 +1,35 @@
 import Item from "../models/item.modal.js";
 import uploadOnCloudinary from "../utils/cloudlnary.js";
+import Shop from "../models/shop.modal.js";
 
 export const addItem = async (req, res) => {
     try {
-        const { name, category, foodTypes, price } = req.body;
+        const { name, category, foodType, price } = req.body;
         let image;
         if (req.file) {
-            image = await uploadOnCloudinary(req.file.path);
+            try {
+                console.log("File received:", req.file.path);
+                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+                if (!cloudinaryResponse || !cloudinaryResponse.secure_url) {
+                    return res.status(500).json({
+                        success: false,
+                        message: "Image upload failed - invalid response from Cloudinary"
+                    });
+                }
+                image = cloudinaryResponse.secure_url; // Extract URL from response
+                console.log("Image uploaded:", image);
+            } catch (uploadError) {
+                console.error("Image upload error:", uploadError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Image upload failed: " + uploadError.message
+                });
+            }
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: "Image is required"
+            });
         }
         const shop = await Shop.findOne({ owner: req.user });
         if (!shop) {
@@ -23,10 +46,15 @@ export const addItem = async (req, res) => {
             image,
             shop: shop._id
         })
+
+        // Add item to shop's items array
+        shop.items.push(item._id);
+        await shop.save();
+
         return res.status(200).json({
             success: true,
             message: 'Item added successfully',
-            item,
+            shop,
         })
     } catch (error) {
         console.log(error);
@@ -44,15 +72,30 @@ export const editItem = async (req, res) => {
         const { name, category, foodType, price } = req.body;
         let image;
         if (req.file) {
-            image = await uploadOnCloudinary(req.file.path);
+            try {
+                const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
+                if (!cloudinaryResponse || !cloudinaryResponse.secure_url) {
+                    return res.status(500).json({
+                        success: false,
+                        message: "Image upload failed"
+                    });
+                }
+                image = cloudinaryResponse.secure_url;
+            } catch (uploadError) {
+                console.error("Image upload error:", uploadError);
+                return res.status(500).json({
+                    success: false,
+                    message: "Image upload failed: " + uploadError.message
+                });
+            }
         }
         const item = await Item.findByIdAndUpdate(itemId, {
             name,
             category,
             foodType,
             price,
-            image
-        })
+            ...(image && { image })
+        }, { new: true })
 
         if (!item) {
             return res.status(400).json({
@@ -63,7 +106,7 @@ export const editItem = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'item upadated successfully',
+            message: 'item updated successfully',
             item,
         })
     } catch (error) {

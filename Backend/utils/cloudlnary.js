@@ -14,8 +14,11 @@ const uploadOnCloudinary = async (file) => {
         fs.unlinkSync(file);
         return result
     } catch (error) {
-        fs.unlinkSync(file)
-        console.log(error)
+        if (fs.existsSync(file)) {
+            fs.unlinkSync(file)
+        }
+        console.log("Cloudinary upload error:", error)
+        throw error;
     }
 }
 

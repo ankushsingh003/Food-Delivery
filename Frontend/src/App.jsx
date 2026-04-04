@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import useGetCity from "./hooks/useGetCity";
 import useGetMyShop from "./hooks/useGetMyShop";
 import CreateEditShop from "./pages/CreateEditShop";
+import AddFoodItem from "./pages/AddFoodItem";
 
 function App() {
   useGetCurrentUser();
@@ -39,6 +40,12 @@ function App() {
           path="/create-edit-shop"
           element={
             userData ? <CreateEditShop /> : <Navigate to={"/signin"}></Navigate>
+          }
+        />
+        <Route
+          path="/add-food"
+          element={
+            userData ? <AddFoodItem /> : <Navigate to={"/signin"}></Navigate>
           }
         />
       </Routes>
