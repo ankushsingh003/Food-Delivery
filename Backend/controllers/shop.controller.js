@@ -1,5 +1,5 @@
-import Shop from "../models/shop.modal";
-import uploadOnCloudinary from "../utils/cloudlnary";
+import Shop from "../models/shop.modal.js";
+import uploadOnCloudinary from "../utils/cloudlnary.js";
 
 export const createShop = async (req, res) => {
     try {
@@ -8,18 +8,19 @@ export const createShop = async (req, res) => {
         if (req.file) {
             image = await uploadOnCloudinary(req.file.path);
         }
-        let shop = await shop.findOne({ owner: req.user });
-        if (!shop) {
-            shop = await Shop.create({
+        let existingShop = await Shop.findOne({ owner: req.user });
+        if (!existingShop) {
+            existingShop = await Shop.create({
                 name,
                 city,
                 state,
                 address,
-                image
+                image,
+                owner: req.user
             });
         }
         else {
-            shop = await shop.findByIdAndUpdate(shop._id, {
+            existingShop = await Shop.findByIdAndUpdate(existingShop._id, {
                 name,
                 city,
                 state,
@@ -28,11 +29,11 @@ export const createShop = async (req, res) => {
             }, { new: true })
         }
 
-        await shop.populate("owner");
+        await existingShop.populate("owner");
         return res.status(201).json({
             success: true,
             message: 'shop created successfully',
-            shop,
+            shop: existingShop,
         })
     } catch (error) {
         return res.status(500).json({
@@ -41,3 +42,26 @@ export const createShop = async (req, res) => {
         })
     }
 }
+
+export const getMyShop = async (req, res) => {
+    try {
+        const shop = await Shop.findOne({ owner: req.user }).populate('owner');
+        if (!shop) {
+            return res.status(404).json({
+                success: false,
+                message: 'Shop not found'
+            });
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'shop data',
+            shop,
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+} 

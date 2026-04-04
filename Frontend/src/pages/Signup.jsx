@@ -165,7 +165,7 @@ const Signup = () => {
               Role
             </label>
             <div className="flex gap-5 items-center justify-between">
-              {["user", "Seller", "Delivery Boy"].map((item, index) => (
+              {["user", "owner", "Delivery Boy"].map((item, index) => (
                 <button
                   key={index}
                   type="button"

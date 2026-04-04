@@ -6,6 +6,8 @@ import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth.route.js';
 import cors from 'cors';
 import userRouter from './routes/user.route.js';
+import shopRouter from './routes/shop.route.js';
+import itemRouter from './routes/item.route.js';
 
 
 const app = express();
@@ -21,7 +23,9 @@ app.use(cors({
 
 // routes
 app.use('/api/auth', authRouter);
-app.use('/api/user', userRouter)
+app.use('/api/user', userRouter);
+app.use('/api/shop', shopRouter);
+app.use('/api/item', itemRouter);
 
 connectToDb();
 app.listen(PORT, () => {
