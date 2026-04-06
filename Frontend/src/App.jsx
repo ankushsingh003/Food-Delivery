@@ -11,6 +11,7 @@ import useGetCity from "./hooks/useGetCity";
 import useGetMyShop from "./hooks/useGetMyShop";
 import CreateEditShop from "./pages/CreateEditShop";
 import AddFoodItem from "./pages/AddFoodItem";
+import EditItem from "./pages/EditItem";
 
 function App() {
   useGetCurrentUser();
@@ -46,6 +47,12 @@ function App() {
           path="/add-food"
           element={
             userData ? <AddFoodItem /> : <Navigate to={"/signin"}></Navigate>
+          }
+        />
+        <Route
+          path="/edit-item/:itemId"
+          element={
+            userData ? <EditItem /> : <Navigate to={"/signin"}></Navigate>
           }
         />
       </Routes>

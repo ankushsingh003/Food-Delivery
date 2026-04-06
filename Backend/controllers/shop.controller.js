@@ -72,7 +72,10 @@ export const createShop = async (req, res) => {
 
 export const getMyShop = async (req, res) => {
     try {
-        const shop = await Shop.findOne({ owner: req.user }).populate('owner').populate('items');
+        const shop = await Shop.findOne({ owner: req.user }).populate('owner').populate({
+            path: "items",
+            options: { sort: { updatedAt: -1 } }
+        });
         if (!shop) {
             return res.status(404).json({
                 success: false,

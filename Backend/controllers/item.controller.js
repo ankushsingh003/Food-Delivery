@@ -50,6 +50,10 @@ export const addItem = async (req, res) => {
         // Add item to shop's items array
         shop.items.push(item._id);
         await shop.save();
+        (await shop.populate("owner")).populate({
+            path: "items",
+            options: { sort: { upddatedAt: -1 } }
+        })
 
         return res.status(200).json({
             success: true,
@@ -103,14 +107,76 @@ export const editItem = async (req, res) => {
                 message: 'item not found'
             })
         }
-
+        const shop = await Shop.findOne({ owner: req.user }).populate({
+            path: "items",
+            options: { sort: { upddatedAt: -1 } }
+        })
         return res.status(200).json({
             success: true,
             message: 'item updated successfully',
-            item,
+            shop,
         })
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+
+export const getItemById = async (req, res) => {
+    try {
+        const { itemId } = req.params;
+        const item = await Item.findById(itemId);
+        console.log(item)
+        if (!item) {
+            return res.status(400).json({
+                sucees: false,
+                message: 'Item not found'
+            })
+        }
+        return res.status(200).json({
+            success: true,
+            message: 'Item found successfully',
+            item
+        })
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: error.message,
+        })
+    }
+}
+
+
+export const deleteItem = async (req, res) => {
+    try {
+        const itemId = req.params.itemId;
+        const item = await Item.findByIdAndDelete(itemId);
+        if (!item) {
+            return res.status(400).json({
+                success: false,
+                message: 'item not found'
+            })
+        }
+
+        const shop = await Shop.findOne({ owner: req.user })
+        shop.items = shop.items.filter(i => i !== item._id);
+        await shop.save();
+        await shop.populate({
+            path: "item",
+            options: { sort: { upddatedAt: -1 } }
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'item deleted succesfully',
+            shop
+        })
+    } catch (error) {
         return res.status(500).json({
             success: false,
             message: error.message
