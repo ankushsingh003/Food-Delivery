@@ -34,21 +34,26 @@ const Nav = () => {
     }
   };
   return (
-    <div className="w-full h-[80px] flex items-center justify-between md:justify-center gap-[30px] px-[20px] fixed top-0 z-[9999] bg-[#fff9f6] overflow-visible">
+    <div className="w-full h-[80px] flex items-center justify-between md:justify-center gap-[30px] px-[20px] fixed top-0 z-[9999] bg-[#fff9f6]">
       {/* small device search bar */}
       {showSearch && userData.role === "user" && (
-        <div className="w-[90%] h-[70px] bg-white shadow-xl rounded-lg items-center gap-[20px] flex top-[160px] left-[5%]">
-          <div className="flex items-center w-[30%] overflow-hidden gap-[10px] px-[10px] border-r-[2px] border-gray-400">
-            <IoLocationOutline size={25} className="text-[#ff4d2d]" />
-            <div className="w-[80%] truncate text-gray-600">{city}</div>
-          </div>
-          <div className="w-[80%] flex items-center gap-[10px]">
-            <IoIosSearch size={25} className="text-[#ff4d2d]" />
-            <input
-              type="text"
-              placeholder="search for delicious foods..."
-              className="px-[10px] text-gray-700 outline-0 w-full"
-            />
+        <div className="fixed top-[80px] left-0 right-0 w-full px-3 py-3 bg-white shadow-lg md:hidden z-[9998] rounded-2xl">
+          <div className="flex items-center gap-2 bg-white rounded-lg overflow-hidden">
+            <div className="flex items-center w-[35%] gap-2 px-3 border-r-2 border-gray-200">
+              <IoLocationOutline
+                size={20}
+                className="text-[#ff4d2d] flex-shrink-0"
+              />
+              <div className="truncate text-gray-600 text-sm">{city}</div>
+            </div>
+            <div className="flex-1 flex items-center gap-2 px-3">
+              <IoIosSearch size={20} className="text-[#ff4d2d] flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="search foods..."
+                className="text-gray-700 outline-0 w-full text-sm bg-transparent"
+              />
+            </div>
           </div>
         </div>
       )}

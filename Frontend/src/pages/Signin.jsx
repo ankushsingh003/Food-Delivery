@@ -9,6 +9,7 @@ import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../Redux/userSlice";
+import { clearMyShopData } from "../Redux/ownerSlice";
 const Signin = () => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -41,6 +42,7 @@ const Signin = () => {
         setError("");
         console.log(res);
         dispatch(setUserData(res.data.user));
+        dispatch(clearMyShopData());
         navigate("/");
       }
     } catch (error) {
@@ -73,6 +75,7 @@ const Signin = () => {
         setError("");
         console.log(result);
         dispatch(setUserData(result.data.user));
+        dispatch(clearMyShopData());
         navigate("/");
       } else {
         setError(result?.data.message || "Authentication failed");

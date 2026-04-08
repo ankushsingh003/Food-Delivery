@@ -8,23 +8,31 @@ const useGetCity = () => {
 
   useEffect(() => {
     const apikey = import.meta.env.VITE_GEOAPIKEY;
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      try {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        const res = await axios.get(
-          `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${apikey}`,
-        );
-        const cityName = res.data.results[0].city;
-        const stateName = res.data.results[0].state;
-        const addresss = res.data.results[0].formatted;
-        dispatch(setState(stateName));
-        dispatch(setCity(cityName));
-        dispatch(setCurentAddress(addresss));
-      } catch (error) {
-        console.error("Error fetching city:", error);
-      }
-    });
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          const res = await axios.get(
+            `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&format=json&apiKey=${apikey}`,
+          );
+          const cityName = res.data.results[0].city;
+          const stateName = res.data.results[0].state;
+          const addresss = res.data.results[0].formatted;
+          dispatch(setState(stateName));
+          dispatch(setCity(cityName));
+          dispatch(setCurentAddress(addresss));
+        } catch (error) {
+          console.error("Error fetching city:", error);
+        }
+      },
+      (error) => {
+        console.error("Geolocation error:", error);
+        // Fallback: set a default city or fetch from IP
+        dispatch(setCity("Delhi")); // Fallback city
+      },
+    );
   }, [dispatch]);
 };
 

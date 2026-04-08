@@ -9,6 +9,7 @@ import { auth } from "../../firebase";
 import { ClipLoader } from "react-spinners";
 import { useDispatch } from "react-redux";
 import { setUserData } from "../Redux/userSlice";
+import { clearMyShopData } from "../Redux/ownerSlice";
 const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("user");
@@ -45,6 +46,7 @@ const Signup = () => {
         setError("");
         console.log(res);
         dispatch(setUserData(res.data.user));
+        dispatch(clearMyShopData());
         naviagte("/signin");
       }
     } catch (error) {
@@ -72,6 +74,7 @@ const Signup = () => {
           mobile,
         },
       );
+      dispatch(clearMyShopData());
       dispatch(setUserData(result.data.user));
     } catch (error) {
       console.log(error);
