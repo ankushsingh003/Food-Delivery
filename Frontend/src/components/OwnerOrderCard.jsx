@@ -1,12 +1,12 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { FaPhoneAlt } from "react-icons/fa";
+import { IoReload } from "react-icons/io5";
 import { useDispatch } from "react-redux";
-import { updateOrderStatus } from "../Redux/userSlice";
+import { updateOrderStatus, setMyOrders } from "../Redux/userSlice";
 
 const OwnerOrderCard = ({ data }) => {
   const [avaliableDeliveryBoys, setAvaliableDeliveryBoys] = useState([]);
-  console.log(avaliableDeliveryBoys);
 
   const dispatch = useDispatch();
   const formatedData = (dateString) => {
@@ -28,12 +28,29 @@ const OwnerOrderCard = ({ data }) => {
         },
       );
       console.log(res.data);
-      setAvaliableDeliveryBoys(res.data.avaliableBoys);
+      setAvaliableDeliveryBoys(res.data.avaliableBoys || []);
       dispatch(updateOrderStatus({ orderId, shopId, status }));
     } catch (error) {
       console.log(error);
     }
   };
+
+  const handleRefresh = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8000/api/order/my-orders`,
+        { withCredentials: true },
+      );
+      if (res.data.success && res.data.orders) {
+        dispatch(setMyOrders(res.data.orders));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const assignedBoy = data.shopOrders?.[0]?.assignedDeliveryBoy;
+
   return (
     <div className="bg-white rounded-lg shadow p-4 space-y-4">
       <div className="flex justify-between border-b pb-2">
@@ -43,13 +60,22 @@ const OwnerOrderCard = ({ data }) => {
             {formatedData(data?.createdAt)}
           </p>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">
-            {data.paymentMethod?.toUpperCase()}
-          </p>
-          <p className="font-medium text-blue-500">
-            {data.shopOrders && data.shopOrders[0]?.status}
-          </p>
+        <div className="flex items-center gap-2">
+          <button
+            className="p-1 rounded-full hover:bg-gray-100 transition"
+            onClick={handleRefresh}
+            title="Refresh order"
+          >
+            <IoReload size={18} className="text-gray-500" />
+          </button>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">
+              {data.paymentMethod?.toUpperCase()}
+            </p>
+            <p className="font-medium text-blue-500">
+              {data.shopOrders && data.shopOrders[0]?.status}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -123,16 +149,28 @@ const OwnerOrderCard = ({ data }) => {
         </select>
       </div>
       {data.shopOrders[0]?.status === "out for delivery" && (
-        <div className="mt-3 p-2 border rounded-lg text-sm bg-orange-50 gap-4">
-          <p>Avaliable Delievery Boys</p>
-          {avaliableDeliveryBoys?.length > 0 ? (
-            avaliableDeliveryBoys?.map((b, index) => (
-              <div key={index} className="text-gray-500">
-                {b.fullName}-{b.mobile}
+        <div className="mt-3 p-3 border rounded-lg text-sm bg-orange-50 space-y-2">
+          {assignedBoy ? (
+            <>
+              <p className="font-semibold text-green-600">✅ Assigned Delivery Boy</p>
+              <div className="flex items-center gap-2 text-gray-700">
+                <FaPhoneAlt size={12} className="text-gray-400" />
+                <span>{assignedBoy.fullName} - {assignedBoy.mobile}</span>
               </div>
-            ))
+            </>
           ) : (
-            <p>Waiting for avaliable delivery boys</p>
+            <>
+              <p className="font-semibold text-orange-600">Available Delivery Boys</p>
+              {avaliableDeliveryBoys?.length > 0 ? (
+                avaliableDeliveryBoys.map((b, index) => (
+                  <div key={index} className="text-gray-600">
+                    {b.fullName} - {b.mobile}
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500">Waiting for available delivery boys. Click 🔄 to refresh.</p>
+              )}
+            </>
           )}
         </div>
       )}

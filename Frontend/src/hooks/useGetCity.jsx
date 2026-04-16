@@ -62,12 +62,12 @@ const useGetCity = () => {
           dispatch(setAddress(addresss));
         } catch (error) {
           console.log(error);
-          dispatch(setCity("Delhi")); // Fallback
+          dispatch(setCity("Howrah")); // Fallback
         }
       },
       (error) => {
         console.log(error);
-        dispatch(setCity("Delhi")); // Fallback city
+        dispatch(setCity("Howrah")); // Fallback city
       },
       {
         timeout: 20000, // Increased to 20 seconds

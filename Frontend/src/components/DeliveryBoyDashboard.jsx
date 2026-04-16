@@ -1,9 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Nav from "./Nav";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import { TbAwardOff } from "react-icons/tb";
+import DeliveryBoyTracking from "./DeliveryBoyTracking";
 
 const DeliveryBoyDashboard = () => {
+  const [avaliableAssigments, setAvaliableAssignments] = useState(null);
+  const [currentOrder, setCurentOrder] = useState(null);
+  const [showOtpBox, setShowOtpBox] = useState(false);
   const { userData } = useSelector((state) => state.user);
   const handleGetAssignment = async () => {
     try {
@@ -11,7 +16,37 @@ const DeliveryBoyDashboard = () => {
         `http://localhost:8000/api/order/get-assignments`,
         { withCredentials: true },
       );
+      console.log(res.data.formatted);
+      if (res.data.success) {
+        setAvaliableAssignments(res.data.formatted);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getCurrentOrder = async () => {
+    try {
+      const res = await axios.get(
+        `http://localhost:8000/api/order/get-current-order`,
+        { withCredentials: true },
+      );
       console.log(res.data);
+      setCurentOrder(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleAcceptOrder = async (assignmentId) => {
+    try {
+      const res = await axios.post(
+        `http://localhost:8000/api/order/accept-order/${assignmentId}`,
+        {},
+        { withCredentials: true },
+      );
+      console.log(res.data);
+      // await getCurrentOrder();
     } catch (error) {
       console.log(error);
     }
@@ -19,6 +54,7 @@ const DeliveryBoyDashboard = () => {
 
   useEffect(() => {
     handleGetAssignment();
+    getCurrentOrder();
   }, [userData]);
   return (
     <div className="w-screen h-min-screen flex flex-col items-center justify-center">
@@ -37,6 +73,89 @@ const DeliveryBoyDashboard = () => {
           </p>
         </div>
       </div>
+      {!currentOrder && (
+        <div className="bg-white rounded-2xl p-5 shadow-md w-[90%] border border-orange-100 mt-5">
+          <h1 className="text-lg font-bold mb-4 flex items-center gap-2">
+            Avaliable Assignments
+          </h1>
+          <div className="space-y-4">
+            {avaliableAssigments?.length > 0 ? (
+              avaliableAssigments?.map((a, index) => (
+                <div
+                  key={index}
+                  className="border flex rounded-lg p-4 items-center justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-semibold">{a?.shopName}</p>
+                    <p className="text-sm text-gray-500">
+                      {a?.deliveryAddress.text}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {a?.item?.length} items | {a?.subtotal}
+                    </p>
+                  </div>
+                  <button
+                    className="bg-[#ff4d2d] hover:bg-[#e65426] px-3 py-2 rounded-lg transition cursor-pointer text-base text-white"
+                    onClick={() => handleAcceptOrder(a.assignmentId)}
+                  >
+                    Accept
+                  </button>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-700 text-sm">No Avaiable Assignments</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {currentOrder && (
+        <div className="bg-white rounded-2xl p-5 shadow-md w-[800px] border border-orange-100 mt-5">
+          <h2 className="text-lg font-bold mb-3">📦Current Order</h2>
+          <div className="border rounded-lg p-4 mb-3">
+            <p className="text-sm font-semibold">
+              {currentOrder?.shopOrder.shop.name}
+            </p>
+            <p className="text-sm text-gray-500">
+              {currentOrder?.deliveryAddress}
+            </p>
+            <p className="text-sm text-gray-500">
+              {currentOrder?.shopOrder.shopOrderItems.length} items |{" "}
+              {currentOrder?.shopOrder.subtotal}
+            </p>
+          </div>
+          <DeliveryBoyTracking data={currentOrder} />
+          {!showOtpBox ? (
+            <button
+              className="mt-4 w-full bg-green-500 text-white font-semiboldpy-2 px-4 rounded-xl shadow-md hover:bg-green-600 transition-all cursor-pointer active:scale-95"
+              onClick={() => setShowOtpBox((prev) => !prev)}
+            >
+              Mark as Delivered
+            </button>
+          ) : (
+            <div className="mt-4 p-4 border rounded-xl bg-gray-100">
+              <p className="text-sm font-semibold mb-2">
+                Enter OTP sent to{" "}
+                <span className="text-[#ff4d2d]">
+                  {currentOrder.user.fullName}
+                </span>
+              </p>
+              <div>
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Enter the otp"
+                    className="w-full border px-3 py-2 rounded-lg mb-3 focus:outline-none focus:border-[#ff4d2d]"
+                  />
+                  <button className="w-full bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-lg transition cursor-pointer text-base text-white">
+                    Verify
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

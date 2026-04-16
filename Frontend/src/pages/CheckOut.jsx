@@ -15,8 +15,8 @@ import { FaCreditCard } from "react-icons/fa";
 import { addMyOrders } from "../Redux/userSlice";
 
 function RecenterMap({ location }) {
-  if (location?.lat !== undefined && location?.lon !== undefined) {
-    const map = useMap();
+  const map = useMap();
+  if (location && location.lat != null && location.lon != null) {
     map.setView([location.lat, location.lon], 16, { animate: true });
   }
   return null;
@@ -99,8 +99,8 @@ const CheckOut = () => {
 
   const getCurrentLocation = () => {
     navigator.geolocation.getCurrentPosition(async (position) => {
-      const latitude = position.coords.latitude;
-      const longitude = position.coords.longitude;
+      const latitude = position?.coords?.latitude;
+      const longitude = position?.coords?.longitude;
       dispatch(setLocation({ lat: latitude, lon: longitude }));
       getAddressByLatlng(latitude, longitude);
     });
