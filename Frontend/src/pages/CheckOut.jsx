@@ -80,7 +80,7 @@ const CheckOut = () => {
             latitude: location.lat,
             longitude: location.lon,
           },
-          totalAmount,
+          totalAmount: totalAmountWithDelivery,
           cartItems,
         },
         { withCredentials: true },

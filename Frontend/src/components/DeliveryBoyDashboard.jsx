@@ -4,13 +4,14 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import { TbAwardOff } from "react-icons/tb";
 import DeliveryBoyTracking from "./DeliveryBoyTracking";
+import { Socket } from "socket.io-client";
 
 const DeliveryBoyDashboard = () => {
   const [avaliableAssigments, setAvaliableAssignments] = useState(null);
   const [currentOrder, setCurentOrder] = useState(null);
   const [showOtpBox, setShowOtpBox] = useState(false);
   const [otp, setOtp] = useState("");
-  const { userData } = useSelector((state) => state.user);
+  const { userData, socket } = useSelector((state) => state.user);
 
   const handleGetAssignment = async () => {
     try {
@@ -84,6 +85,17 @@ const DeliveryBoyDashboard = () => {
       console.log(error);
     }
   };
+
+  useEffect(() => {
+    socket.on("newAssignment", (data) => {
+      if (data.sentTo === userData._id) {
+        setAvaliableAssignments((prev) => [...prev, data]);
+      }
+    });
+    return () => {
+      socket?.off("newAssignment");
+    };
+  }, [avaliableAssigments]);
 
   useEffect(() => {
     handleGetAssignment();

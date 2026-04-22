@@ -37,10 +37,9 @@ const OwnerOrderCard = ({ data }) => {
 
   const handleRefresh = async () => {
     try {
-      const res = await axios.get(
-        `http://localhost:8000/api/order/my-orders`,
-        { withCredentials: true },
-      );
+      const res = await axios.get(`http://localhost:8000/api/order/my-orders`, {
+        withCredentials: true,
+      });
       if (res.data.success && res.data.orders) {
         dispatch(setMyOrders(res.data.orders));
       }
@@ -69,9 +68,13 @@ const OwnerOrderCard = ({ data }) => {
             <IoReload size={18} className="text-gray-500" />
           </button>
           <div className="text-right">
-            <p className="text-sm text-gray-500">
-              {data.paymentMethod?.toUpperCase()}
-            </p>
+            {data.paymentMethod === "online" ? (
+              <p className="text-sm text-gray-500">
+                {data.payment ? "Paid" : "Not Paid"}
+              </p>
+            ) : (
+              <p className="text-sm text-gray-500">{data.paymentMethod}</p>
+            )}
             <p className="font-medium text-blue-500">
               {data.shopOrders && data.shopOrders[0]?.status}
             </p>
@@ -152,15 +155,21 @@ const OwnerOrderCard = ({ data }) => {
         <div className="mt-3 p-3 border rounded-lg text-sm bg-orange-50 space-y-2">
           {assignedBoy ? (
             <>
-              <p className="font-semibold text-green-600">✅ Assigned Delivery Boy</p>
+              <p className="font-semibold text-green-600">
+                ✅ Assigned Delivery Boy
+              </p>
               <div className="flex items-center gap-2 text-gray-700">
                 <FaPhoneAlt size={12} className="text-gray-400" />
-                <span>{assignedBoy.fullName} - {assignedBoy.mobile}</span>
+                <span>
+                  {assignedBoy.fullName} - {assignedBoy.mobile}
+                </span>
               </div>
             </>
           ) : (
             <>
-              <p className="font-semibold text-orange-600">Available Delivery Boys</p>
+              <p className="font-semibold text-orange-600">
+                Available Delivery Boys
+              </p>
               {avaliableDeliveryBoys?.length > 0 ? (
                 avaliableDeliveryBoys.map((b, index) => (
                   <div key={index} className="text-gray-600">
@@ -168,7 +177,9 @@ const OwnerOrderCard = ({ data }) => {
                   </div>
                 ))
               ) : (
-                <p className="text-gray-500">Waiting for available delivery boys. Click 🔄 to refresh.</p>
+                <p className="text-gray-500">
+                  Waiting for available delivery boys. Click 🔄 to refresh.
+                </p>
               )}
             </>
           )}

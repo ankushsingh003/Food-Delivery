@@ -9,9 +9,26 @@ import userRouter from './routes/user.route.js';
 import shopRouter from './routes/shop.route.js';
 import itemRouter from './routes/item.route.js';
 import orderRouter from './routes/order.routes.js';
+import http, { ServerResponse } from 'http'
+import { Server } from 'socket.io';
+import { socketHandler } from './socket.js';
 
 
 const app = express();
+const server = http.createServer(app);
+
+const io = new Server(server,
+    {
+        cors: {
+            origin: "http://localhost:5173",
+            credentials: true,
+            methods: ["GET", "POST"],
+        }
+    }
+)
+
+app.set('io', io);
+
 const PORT = process.env.PORT || 4000;
 
 // middlewares
@@ -29,7 +46,10 @@ app.use('/api/shop', shopRouter);
 app.use('/api/item', itemRouter);
 app.use('/api/order', orderRouter);
 
+
+socketHandler(io);
+
 connectToDb();
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`server started at port ${PORT}`)
 })

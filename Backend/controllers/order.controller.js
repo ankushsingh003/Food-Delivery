@@ -6,6 +6,7 @@ import User from "../models/user.model.js";
 import { sendDeliveryOtp } from "../utils/mail.js";
 import RazorPay from "razorpay";
 import dotenv from 'dotenv'
+import { app } from "../../Frontend/firebase.js";
 dotenv.config()
 
 let instance = new RazorPay({
@@ -91,10 +92,29 @@ export const placeOrder = async (req, res) => {
             shopOrders
         })
 
-        await newOrder.populate('shopOrders.shopOrderItems.item', 'name image price')
-        await newOrder.populate('shopOrders.shop', 'name')
+        await newOrder.populate('shopOrders.shopOrderItems.item', 'name image price');
+        await newOrder.populate('shopOrders.owner', 'fullName socketId');
+        await newOrder.populate('shopOrders.shop', 'name');
+        await newOrder.populate('user', 'fullName email mobile')
 
+        const io = req.app.get('io');
 
+        if (io) {
+            newOrder.shopOrders.forEach((shopOrder) => {
+                const ownerSocketId = shopOrder.owner.socketId;
+                if (ownerSocketId) {
+                    io.to(ownerSocketId).emit('newOrder', {
+                        _id: newOrder._id,
+                        paymentMethod: newOrder.paymentMethod,
+                        user: newOrder.user,
+                        shopOrders: [shopOrder],
+                        createdAt: newOrder.createdAt,
+                        deliveryAddress: newOrder.deliveryAddress,
+                        payment: newOrder.payment,
+                    });
+                }
+            })
+        }
         return res.status(201).json({
             success: true,
             message: 'shop oder created successfully',
@@ -133,8 +153,29 @@ export const verifyPayment = async (req, res) => {
         order.razorpayPaymentId = razorpayPaymentId;
         await order.save();
 
-        await order.populate('shopOrders.shopOrderItems.item', 'name image price')
-        await order.populate('shopOrders.shop', 'name')
+        await order.populate('shopOrders.shopOrderItems.item', 'name image price');
+        await order.populate('shopOrders.owner', 'fullName socketId');
+        await order.populate('shopOrders.shop', 'name');
+        await order.populate('user', 'fullName email mobile')
+
+        const io = req.app.get('io');
+
+        if (io) {
+            order.shopOrders.forEach((shopOrder) => {
+                const ownerSocketId = shopOrder.owner.socketId;
+                if (ownerSocketId) {
+                    io.to(ownerSocketId).emit('newOrder', {
+                        _id: order._id,
+                        paymentMethod: order.paymentMethod,
+                        user: order.user,
+                        shopOrders: [shopOrder],
+                        createdAt: order.createdAt,
+                        deliveryAddress: order.deliveryAddress,
+                        payment: order.payment,
+                    });
+                }
+            })
+        }
 
         return res.status(200).json({
             success: true,
@@ -173,11 +214,15 @@ export const getMyOrder = async (req, res) => {
             const filteredOrders = orders.map((order => ({
                 _id: order._id,
                 paymentMethod: order.paymentMethod,
+                payment: order.payment,
                 user: order.user,
                 shopOrders: order.shopOrders.filter(o => o.owner.toString() === req.user.toString()),
                 createdAt: order.createdAt,
                 deliveryAddress: order.deliveryAddress,
             })))
+            if (filteredOrders.length > 0 && filteredOrders[0].shopOrders.length > 0) {
+                console.log(JSON.stringify(filteredOrders[0].shopOrders[0].shopOrderItems, null, 2))
+            }
             return res.status(200).json({
                 success: true,
                 orders: filteredOrders
@@ -242,7 +287,7 @@ export const updateOrderStatus = async (req, res) => {
                             type: "Point",
                             coordinates: [Number(longitude), Number(latitude)]
                         },
-                        $maxDistance: 5000
+                        $maxDistance: 50000
                     }
                 }
             })
@@ -279,12 +324,47 @@ export const updateOrderStatus = async (req, res) => {
                 latitude: b.location.coordinates[1],
                 mobile: b.mobile,
             }))
+            await deliveryAssignment.populate('order');
+            await deliveryAssignment.populate('shop');
+
+            const io = app.get("io");
+            if (io) {
+                avalibleBoys.forEach(boy => {
+                    const boySocketId = boy.socketId;
+                    if (boySocketId) {
+                        io.to(boySocketId).emit('newAssignment', {
+                            sentTo: boy._id,
+                            assgingment: deliveryAssignment._id,
+                            orderId: deliveryAssignment.order,
+                            shopName: deliveryAssignment.shop.name,
+                            deliveryAddress: deliveryAssignment.order.deliveryAddress,
+                            items: deliveryAssignment.order.shopOrders.find(so => so._id.equals(deliveryAssignment.shopOrderId.toString())).shopOrderItems || [],
+                            subtotal: deliveryAssignment.order.shopOrders.find(so => so._id.equals(deliveryAssignment.shopOrderId.toString())).subtotal,
+                        })
+                    }
+                })
+            }
         }
         await order.save();
         await order.populate("shopOrders.shop", "name");
         await order.populate("shopOrders.assignedDeliveryBoy", "name email mobile");
+        await order.populate('user', 'socketId');
 
         const updatedShopOrder = order.shopOrders.find(o => o._id.toString() === shopId.toString());
+
+        const io = req.app.get('io');
+
+        if (io) {
+            const userSocketId = order.user.socketId;
+            if (userSocketId) {
+                io.to(userSocketId).emit('update-status', {
+                    orderId: order._id,
+                    shopId: updatedShopOrder._id,
+                    status: updatedShopOrder.status,
+                    userId: order.user._id,
+                })
+            }
+        }
         return res.status(200).json({
             success: true,
             shopOrder: updatedShopOrder,
