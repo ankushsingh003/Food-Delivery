@@ -21,6 +21,7 @@ export const categories = [
     { "category": "North Indian", "image": image8 },
     { "category": "Chinese", "image": image9 },
     { "category": "Fast Food", "image": image10 },
-    { "category": "All", "image": image11 }
+    { "category": "All", "image": image11 },
+    { "category": "Sweets", "image": image12 },
 
 ]
